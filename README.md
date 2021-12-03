@@ -1,34 +1,50 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Trouble ignoring babel file
 
-## Getting Started
+It seems like Next.js doesn't respect the `ignore` babel directive when transforming them.
 
-First, run the development server:
+The `babel.config.js` contains a preset `babel-preset-expo` which causes issues when transforming \_middleware functions into compatible edge functions (no Eval, no new Function, etc…).
 
-```bash
-npm run dev
-# or
-yarn dev
+When trying to ignore the `_middleware` files inside the configuration, they are still transformed using `@babel/runtime`.
+
+The `test-babel` script inside this repository uses the babel configuration in the root to transform the files inside of the `pages/` directory into `babel-test/`.
+
+When ran with the `TRANSFORM_ALL` constant set to `true`, the `_middleware` file is also transformed. When set to false, it is not. This is in line with how the `ignore` option is supposed to work with Babel.
+
+However, when running `npm run build`, the same file is _still_ transformed by Babel. This is highlighted after the build fails.
+
+Even stranger, with the ignore options present with `TRANSFORM_ALL` set to `true`, the contents of the middleware are not even included in `_middleware.js` and yet it fails.
+
+```sh
+Failed to compile.
+
+./node_modules/next/node_modules/@babel/runtime/helpers/construct.js
+Dynamic Code Evaluation (e. g. 'eval', 'new Function') not allowed in Middleware pages/api/_middleware
+
+Import trace for requested module:
+./node_modules/next/node_modules/@babel/runtime/helpers/wrapNativeSuper.js
+./node_modules/next/dist/shared/lib/utils.js
+./node_modules/next/dist/shared/lib/router/utils/parse-relative-url.js
+./node_modules/next/dist/shared/lib/router/utils/parse-url.js
+./node_modules/next/dist/shared/lib/router/utils/prepare-destination.js
+./node_modules/next/dist/server/router.js
+./node_modules/next/dist/server/web/next-url.js
+./node_modules/next/dist/server/web/spec-extension/response.js
+./node_modules/next/dist/server/web/adapter.js
+
+./node_modules/next/node_modules/@babel/runtime/helpers/isNativeFunction.js
+Dynamic Code Evaluation (e. g. 'eval', 'new Function') not allowed in Middleware pages/api/_middleware
+
+Import trace for requested module:
+./node_modules/next/node_modules/@babel/runtime/helpers/wrapNativeSuper.js
+./node_modules/next/dist/shared/lib/utils.js
+./node_modules/next/dist/shared/lib/router/utils/parse-relative-url.js
+./node_modules/next/dist/shared/lib/router/utils/parse-url.js
+./node_modules/next/dist/shared/lib/router/utils/prepare-destination.js
+./node_modules/next/dist/server/router.js
+./node_modules/next/dist/server/web/next-url.js
+./node_modules/next/dist/server/web/spec-extension/response.js
+./node_modules/next/dist/server/web/adapter.js
+
+
+> Build failed because of webpack errors
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
